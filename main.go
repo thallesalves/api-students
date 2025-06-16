@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/thallesalves/api-students/db"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 
 	// Routes
 	e.GET("/students", getStudents)
-	e.POST("/students", creatStudent)
+	e.POST("/students", createStudent)
 	e.GET("/students/:id", getStudent)
 	e.PUT("/students/:id", updateStudent)
 	e.DELETE("/students/:id", deleteStudent)
@@ -36,8 +37,13 @@ func getStudents(c echo.Context) error {
 	return c.String(http.StatusOK, "List of all students")
 }
 
-func creatStudent(c echo.Context) error {
-	return c.String(http.StatusOK, "Creat student")
+func createStudent(c echo.Context) error {
+	student := db.Student{}
+	if err := c.Bind(&student); err != nil {
+		return err
+	}
+	db.AddStudent(student)
+	return c.String(http.StatusOK, "Create student")
 }
 
 func getStudent(c echo.Context) error {
