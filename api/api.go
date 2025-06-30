@@ -7,12 +7,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/thallesalves/api-students/db"
-	"gorm.io/gorm"
 )
 
 type API struct {
 	Echo *echo.Echo
-	Db   *gorm.DB
+	DB   *db.StudentHandler
 }
 
 func NewServer() *API {
@@ -21,29 +20,30 @@ func NewServer() *API {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	db := db.Init()
+	database := db.Init()
+	studentsDB := db.NewStudentHandler(database)
 
 	return &API{
 		Echo: e,
-		Db:   db,
+		DB:   studentsDB,
 	}
 }
 
 func (api *API) ConfigureRoutes() {
 	// Routes
-	api.Echo.GET("/students", getStudents)
-	api.Echo.POST("/students", createStudent)
-	api.Echo.GET("/students/:id", getStudent)
-	api.Echo.PUT("/students/:id", updateStudent)
-	api.Echo.DELETE("/students/:id", deleteStudent)
+	api.Echo.GET("/students", api.getStudents)
+	api.Echo.POST("/students", api.createStudent)
+	api.Echo.GET("/students/:id", api.getStudent)
+	api.Echo.PUT("/students/:id", api.updateStudent)
+	api.Echo.DELETE("/students/:id", api.deleteStudent)
 }
 
 func (api *API) Start() error {
 	return api.Echo.Start(":8080")
 }
 
-func getStudents(c echo.Context) error {
-	students, err := db.GetStudents()
+func (api *API) getStudents(c echo.Context) error {
+	students, err := api.DB.GetStudents()
 	if err != nil {
 		return c.String(http.StatusNotFound, "Error to get students")
 	}
@@ -51,31 +51,31 @@ func getStudents(c echo.Context) error {
 	return c.JSON(http.StatusOK, students)
 }
 
-func createStudent(c echo.Context) error {
+func (api *API) createStudent(c echo.Context) error {
 	student := db.Student{}
 	if err := c.Bind(&student); err != nil {
 		return err
 	}
-	if err := db.AddStudent(student); err != nil {
+	if err := api.DB.AddStudent(student); err != nil {
 		return c.String(http.StatusInternalServerError, "Error to create student")
 	}
 
 	return c.String(http.StatusOK, "Create student")
 }
 
-func getStudent(c echo.Context) error {
+func (api *API) getStudent(c echo.Context) error {
 	id := c.Param("id")
 	getStud := fmt.Sprintf("Get student with id %s", id)
 	return c.String(http.StatusOK, getStud)
 }
 
-func updateStudent(c echo.Context) error {
+func (api *API) updateStudent(c echo.Context) error {
 	id := c.Param("id")
 	updateStud := fmt.Sprintf("Update student with id %s", id)
 	return c.String(http.StatusOK, updateStud)
 }
 
-func deleteStudent(c echo.Context) error {
+func (api *API) deleteStudent(c echo.Context) error {
 	id := c.Param("id")
 	deleteStud := fmt.Sprintf("Delete student with id %s", id)
 	return c.String(http.StatusOK, deleteStud)
