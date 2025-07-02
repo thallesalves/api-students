@@ -30,7 +30,6 @@ func NewServer() *API {
 }
 
 func (api *API) ConfigureRoutes() {
-	// Routes
 	api.Echo.GET("/students", api.getStudents)
 	api.Echo.POST("/students", api.createStudent)
 	api.Echo.GET("/students/:id", api.getStudent)
