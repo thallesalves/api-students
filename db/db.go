@@ -46,6 +46,13 @@ func (s *StudentHandler) GetStudents() ([]schemas.Student, error) {
 
 }
 
+func (s *StudentHandler) GetStatusStudents(active bool) ([]schemas.Student, error) {
+	statusStudents := []schemas.Student{}
+	err := s.DB.Where("active = ?", active).Find(&statusStudents)
+	return statusStudents, err.Error
+
+}
+
 func (s *StudentHandler) GetStudent(id int) (schemas.Student, error) {
 	var student schemas.Student
 	err := s.DB.First(&student, id)
